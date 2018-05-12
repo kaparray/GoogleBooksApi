@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">GoogleBooks</string>
+    <string name="hint_search">Search</string>
+</resources>
