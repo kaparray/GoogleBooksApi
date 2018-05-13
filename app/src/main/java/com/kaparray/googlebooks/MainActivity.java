@@ -1,6 +1,8 @@
 package com.kaparray.googlebooks;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Parcelable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -17,7 +19,9 @@ import android.widget.TextView;
 
 import com.kaparray.googlebooks.Api.ApiBooks;
 import com.kaparray.googlebooks.Data.BooksData;
+import com.kaparray.googlebooks.Data.Item;
 import com.kaparray.googlebooks.adapters.MyAdapter;
+import com.kaparray.googlebooks.adapters.RecyclerItemClickListener;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -144,6 +148,26 @@ public class MainActivity extends AppCompatActivity{
                     mNoResults.setVisibility(View.VISIBLE);
                     mNoResults.setText("Не найдено ни одного результата");
                 }
+
+                mRecyclerViewBooks.addOnItemTouchListener(
+                        new RecyclerItemClickListener(getApplicationContext(), mRecyclerViewBooks, new RecyclerItemClickListener.OnItemClickListener() {
+                            @Override
+                            public void onItemClick(View view, int position) {
+                                // do whatever
+
+                                Intent intent = new Intent(MainActivity.this, OpenBookActivity.class);
+                                intent.putExtra("data", booksDataList.getItems().get(position).getId());
+                                startActivity(intent);
+
+                            }
+
+                            @Override
+                            public void onLongItemClick(View view, int position) {
+                                // do whatever
+                            }
+                        })
+                );
+
             }
 
             @Override

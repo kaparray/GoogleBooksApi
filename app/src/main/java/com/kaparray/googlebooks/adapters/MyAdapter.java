@@ -17,7 +17,6 @@ import com.kaparray.googlebooks.Data.SaleInfo;
 import com.kaparray.googlebooks.R;
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -90,11 +89,11 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         }
 
         public void setTitleName(String Name) {
+            TextView name = mView.findViewById(R.id.tv_nameBook);
+
             if(Name.length() <= 30) {
-                TextView name = mView.findViewById(R.id.tv_nameBook);
-                name.setText(Name + " ");
+                name.setText(Name);
             }else{
-                TextView name = mView.findViewById(R.id.tv_nameBook);
                 name.setText(Name.substring(0,30) + "..");
             }
         }
@@ -113,9 +112,15 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
         public void setAuthor(List<String> Author){
             TextView author = mView.findViewById(R.id.tv_author);
-           for(int i = 0; i < Author.size(); i++){
-               author.setText(Author.get(i) + ", ");
-           }
+            String authorString = "";
+            for (int i = 0; i < Author.size(); i++)
+                authorString = Author.get(i) + " ";
+
+            if(authorString.length() <= 20) {
+                author.setText(authorString);
+            }else{
+                author.setText(authorString.substring(0,18) + "..");
+            }
         }
 
         public void setAuthor(String Author){
