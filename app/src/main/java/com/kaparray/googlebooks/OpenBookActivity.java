@@ -16,11 +16,14 @@ import android.widget.Toast;
 import com.kaparray.googlebooks.Api.ApiBook;
 
 import com.kaparray.googlebooks.Data.Item;
+import com.kaparray.googlebooks.RealmData.BookRealm;
 import com.squareup.picasso.Picasso;
 
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.realm.Realm;
+import io.realm.RealmResults;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -33,6 +36,7 @@ public class OpenBookActivity extends AppCompatActivity {
     public static final String KEY_API = "AIzaSyBA14zOMI_3xSNWED-HYtfl8CidvqMTuRM";
 
     Item item;
+    Realm realm;
 
 
     @BindView(R.id.tv_nameOpen) TextView mNameBook;
@@ -41,6 +45,7 @@ public class OpenBookActivity extends AppCompatActivity {
     @BindView(R.id.pb_Open)ProgressBar mProgressBar;
     @BindView(R.id.btn_freeSampleBook) Button mButtonFreeSample;
     @BindView(R.id.btn_eBook) Button mEBook;
+    @BindView(R.id.tv_description) TextView mDescription;
 
 
 
@@ -50,6 +55,12 @@ public class OpenBookActivity extends AppCompatActivity {
         setContentView(R.layout.ac_open_book);
 
         ButterKnife.bind(this);
+
+        // Initialize Realm (just once per application)
+        Realm.init(getApplicationContext());
+
+        // Get a Realm instance for this thread
+        realm = Realm.getDefaultInstance();
 
 
         mNameBook.setVisibility(View.GONE);
@@ -62,9 +73,11 @@ public class OpenBookActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         String id = intent.getStringExtra("data");
+        String list =  intent.getStringExtra("list" );
 
 
-        getBookDataFromServer(id);
+
+        getBookDataFromServer(id, list);
 
 
 
@@ -93,7 +106,7 @@ public class OpenBookActivity extends AppCompatActivity {
 
 
 
-    void getBookDataFromServer(String id){
+    void getBookDataFromServer(String id, final String list){
 
 
         Retrofit retrofit = new Retrofit.Builder()
@@ -110,7 +123,44 @@ public class OpenBookActivity extends AppCompatActivity {
             public void onResponse(Call<Item> call, Response<Item> response) {
                 item = response.body();
 
-                Log.d("11111", item.getVolumeInfo().getTitle() +"" );
+
+                if(list.equals("false")) {
+                    realm.beginTransaction();  //open the database
+                    //database operation
+                    BookRealm bookDataRealm = realm.createObject(BookRealm.class);
+
+
+                    RealmResults<BookRealm> results = realm.where(BookRealm.class).findAllAsync();
+                    //fetching the data
+                    results.load();
+
+                    int last = 0;
+
+                    for (BookRealm information : results) {
+                        last = information.getIdBook();
+                    }
+
+
+                    bookDataRealm.setIdBook(last + 1);
+                    mNameBook.setText(item.getVolumeInfo().getTitle() + "");
+                    bookDataRealm.setKey(item.getId());
+                    bookDataRealm.setName(item.getVolumeInfo().getTitle() + "");// Add to realm db
+                    bookDataRealm.setAuthor(item.getVolumeInfo().getAuthors().get(0));// Add to realm db
+                    try {
+                        bookDataRealm.setPhoto(item.getVolumeInfo().getImageLinks().getThumbnail());// Add to realm db
+                    } catch (NullPointerException e) {
+                        bookDataRealm.setPrice(null);// Add to realm db
+                    }
+
+                    try {
+                        bookDataRealm.setPrice(item.getSaleInfo().getRetailPrice().getAmount() + " " +
+                                item.getSaleInfo().getRetailPrice().getCurrencyCode());// Add to realm db
+                    } catch (NullPointerException e) {
+                        bookDataRealm.setPrice("None price");// Add to realm db
+                    }
+
+                    realm.commitTransaction(); //close the database
+                }
 
                 try {
                     String authorString = item.getVolumeInfo().getTitle();
@@ -121,7 +171,6 @@ public class OpenBookActivity extends AppCompatActivity {
                         mNameAuthor.setText(item.getVolumeInfo().getTitle().substring(0,10) + "\n"
                                 + item.getVolumeInfo().getTitle().substring(10));
                     }
-                    mNameBook.setText(item.getVolumeInfo().getTitle() + " ");
                 }catch (NullPointerException e){
                     mNameBook.setText("None book name");
                 }
@@ -144,7 +193,8 @@ public class OpenBookActivity extends AppCompatActivity {
                 try {
                     Picasso.get().load(item.getVolumeInfo().getImageLinks().getThumbnail()).into(mPhoto);
                 }catch (NullPointerException e){
-                    mPhoto.setImageDrawable(getResources().getDrawable(R.drawable.ic_error));                }
+                    mPhoto.setImageDrawable(getResources().getDrawable(R.drawable.ic_error));
+                }
 
 
                 try {
@@ -153,6 +203,23 @@ public class OpenBookActivity extends AppCompatActivity {
                 }catch (NullPointerException e){
                     mEBook.setText("None price");
                 }
+
+
+
+                try {
+                    String d = item.getVolumeInfo().getDescription() + "";
+
+                    if(d.equals("null")){
+                        mDescription.setText("None description");
+                    }else{
+                        mDescription.setText(d + "");
+                    }
+
+                    Log.d("1111", d);
+                }catch (Exception e){
+                    mEBook.setText("None description");
+                }
+
 
 
                 mNameBook.setVisibility(View.VISIBLE);

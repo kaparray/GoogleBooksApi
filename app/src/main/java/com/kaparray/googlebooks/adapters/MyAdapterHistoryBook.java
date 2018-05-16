@@ -12,23 +12,24 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.kaparray.googlebooks.Data.BooksData;
 import com.kaparray.googlebooks.Data.SaleInfo;
 import com.kaparray.googlebooks.R;
+
+import com.kaparray.googlebooks.RealmData.BookRealm;
 import com.squareup.picasso.Picasso;
 
+import java.util.HashSet;
 import java.util.List;
 
 
-public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
+public class MyAdapterHistoryBook extends RecyclerView.Adapter<MyAdapterHistoryBook.ViewHolder> {
 
 
-
-    private BooksData booksDataList;
+    private List<BookRealm> booksDataList;
     private Context context;
 
 
-    public MyAdapter(BooksData booksDataList, Context context) {
+    public MyAdapterHistoryBook(List<BookRealm> booksDataList, Context context) {
         this.booksDataList = booksDataList;
         this.context = context;
     }
@@ -48,29 +49,32 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
 
         try {
-            holder.setTitleName(booksDataList.getItems().get(position).getVolumeInfo().getTitle());
-        }catch(NullPointerException e){
+            holder.setTitleName(booksDataList.get(position).getName());
+        } catch (NullPointerException e) {
             holder.setTitleName("None book name");
-            Log.w("Message", "Error: "  + e.getStackTrace());
-        }
-
-        try {
-            holder.setPhoto(booksDataList.getItems().get(position).getVolumeInfo().getImageLinks().getThumbnail());
-        }catch(NullPointerException e){
-            holder.setPhoto(context.getResources().getDrawable(R.drawable.ic_error));
             Log.w("Message", "Error: " + e.getStackTrace());
         }
 
         try {
-            holder.setAuthor(booksDataList.getItems().get(position).getVolumeInfo().getAuthors());
-        }catch(NullPointerException e){
+            if(booksDataList.get(position).getPhoto() == null){
+                holder.setPhoto(context.getResources().getDrawable(R.drawable.ic_error));
+            }else {
+                holder.setPhoto(booksDataList.get(position).getPhoto());
+            }
+        } catch (Exception e) {
+            holder.setPhoto(context.getResources().getDrawable(R.drawable.ic_error));
+        }
+
+        try {
+            holder.setAuthor(booksDataList.get(position).getAuthor());
+        } catch (NullPointerException e) {
             holder.setAuthor("None author");
             Log.w("Message", "Error: " + e.getStackTrace());
         }
 
         try {
-            holder.setPrice(booksDataList.getItems().get(position).getSaleInfo());
-        }catch(NullPointerException e){
+            holder.setPrice(booksDataList.get(position).getPrice());
+        } catch (NullPointerException e) {
             holder.setPrice("None price");
             Log.w("Message", "Error: " + e.getStackTrace());
         }
@@ -79,8 +83,8 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
 
     @Override
     public int getItemCount() {
-        Log.d("Message", booksDataList.getItems().size()+"");
-        return booksDataList.getItems().size();
+        Log.d("Message", booksDataList.size() + "");
+        return booksDataList.size();
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -90,46 +94,53 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
         public ViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
+            Log.d("Error", itemView+"");
         }
 
         public void setTitleName(String Name) {
             TextView name = mView.findViewById(R.id.tv_nameBook);
 
-            if(Name.length() <= 30) {
+            if (Name.length() <= 30) {
                 name.setText(Name);
-            }else{
-                name.setText(Name.substring(0,30) + "..");
+            } else {
+                name.setText(Name.substring(0, 30) + "..");
             }
+            Log.d("Error Name", Name+"");
         }
-
 
 
         public void setPhoto(String Link) {
             ImageView imageView = mView.findViewById(R.id.iv_photo);
             Picasso.get().load(Link).into(imageView);
+            Log.d("Error Photo", Link+"");
+
         }
 
         public void setPhoto(Drawable drawable) {
             ImageView imageView = mView.findViewById(R.id.iv_photo);
             imageView.setImageDrawable(drawable);
+            Log.d("Error Photo", drawable+"");
         }
 
-        public void setAuthor(List<String> Author){
+        public void setAuthor(List<String> Author) {
             TextView author = mView.findViewById(R.id.tv_author);
             String authorString = "";
             for (int i = 0; i < Author.size(); i++)
                 authorString = Author.get(i) + " ";
 
-            if(authorString.length() <= 20) {
+            if (authorString.length() <= 20) {
                 author.setText(authorString);
-            }else{
-                author.setText(authorString.substring(0,18) + "..");
+            } else {
+                author.setText(authorString.substring(0, 18) + "..");
             }
+            Log.d("Error author", Author+"");
         }
 
-        public void setAuthor(String Author){
+        public void setAuthor(String Author) {
             TextView author = mView.findViewById(R.id.tv_author);
             author.setText(Author);
+            Log.d("Error author", Author+"");
+
         }
 
         @SuppressLint("SetTextI18n")
@@ -137,7 +148,7 @@ public class MyAdapter extends RecyclerView.Adapter<MyAdapter.ViewHolder> {
             TextView price = mView.findViewById(R.id.tv_price);
             if (saleInfo.getSaleability().equals("FOR_SALE")) {
                 price.setText(saleInfo.getRetailPrice().getAmount() + saleInfo.getRetailPrice().getCurrencyCode());
-            }else if(saleInfo.getSaleability().equals("NOT_FOR_SALE")){
+            } else if (saleInfo.getSaleability().equals("NOT_FOR_SALE")) {
                 price.setText("Not for sale");
             }
         }
